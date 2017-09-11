@@ -16,53 +16,68 @@ const (
 
 var (
 	methods = map[string]CallBack{}
+	client  *ZkClient
 )
 
-type zkClient struct {
+type ZkClient struct {
 	conn *zk.Conn
 }
 
 type CallBack interface {
-	OnDataChange(path string)
-	OnChildNodeChange(path string)
+	OnDataChange(path string, client *ZkClient)
+	OnChildNodeChange(path string, client *ZkClient)
+	//OnNodeCreate(path string)
+	//OnNodeDelete(path string)
 }
 
-func Connect(hosts []string) (*zkClient, error) {
-	client := zkClient{}
-	option:=zk.WithEventCallback(listen)
-	conn, _, err := zk.Connect(hosts, time.Second*5,option)
+func Connect(hosts []string) (*ZkClient, error) {
+	cli := ZkClient{}
+	option := zk.WithEventCallback(listen)
+	conn, _, err := zk.Connect(hosts, time.Second*5, option)
 	if err != nil {
 		return nil, err
 	}
-	client.conn = conn
-	return &client, nil
+	cli.conn = conn
+	client = &cli
+	return &cli, nil
 }
 
-func (z *zkClient) Close() {
+/**
+ * Init the config on the remote zookeeper.
+ */
+func (z *ZkClient) InitServiceConfig(path string, config map[string]string) {
+
+}
+
+func (z *ZkClient) Close() {
 	z.conn.Close()
 }
 
-func (z *zkClient) CreateNode(path string, data string) error {
+func (z *ZkClient) CreateNode(path string, data string) error {
 	_, err := z.conn.Create(path, []byte(data), zk.FlagEphemeral, zk.WorldACL(zk.PermAll))
 	return err
 }
 
-func (z *zkClient) Set(path string, data string) error {
+func (z *ZkClient) SetNodeData(path string, data string) error {
 	_, err := z.conn.Set(path, []byte(data), zk.FlagEphemeral)
 	return err
 }
 
-func (z *zkClient) GetNodeData(path string) (string, error) {
+func (z *ZkClient) GetNodeData(path string) (string, error) {
 	date, _, err := z.conn.Get(path)
 	return string(date), err
 }
 
-func (z *zkClient) GetChildNodes(path string) ([]string, error) {
+func (z *ZkClient) GetChildNodes(path string) ([]string, error) {
 	childNodes, _, err := z.conn.Children(path)
 	return childNodes, err
 }
 
-func (z *zkClient) AddWatch(path string, fun CallBack) {
+func (z *ZkClient) AddChildrenWatch(path string, fun CallBack) {
+	methods[path] = fun
+}
+
+func (z *ZkClient) AddDataWatch(path string, fun CallBack) {
 	methods[path] = fun
 }
 
@@ -72,17 +87,34 @@ func listen(event zk.Event) {
 	case event.Type == zk.EventNodeDataChanged:
 		fun, ok := methods[event.Path]
 		if ok {
-			fun.OnDataChange(event.Path)
+			fun.OnDataChange(event.Path, client)
+			go func() {
+				client.conn.GetW(event.Path)
+			}()
 		}
-	case event.Type==zk.EventNodeChildrenChanged:
+	case event.Type == zk.EventNodeChildrenChanged:
+		fun, ok := methods[event.Path]
+		if ok {
+			fun.OnChildNodeChange(event.Path, client)
+			go func() {
+				client.conn.GetW(event.Path)
+			}()
+		} /*
+	case event.Type==zk.EventNodeCreated:
 		fun, ok :=methods[event.Path]
 		if ok{
-			fun.OnChildNodeChange(event.Path)
+			fun.OnNodeCreate(event.Path)
+			go func(){
+				client.conn.ExistsW(event.Path)
+			}()
 		}
-	default:
+	case event.Type==zk.EventNodeDeleted:
+		fun, ok :=methods[event.Path]
+		if ok{
+			fun.OnNodeDelete(event.Path)
+		}*/
 
+	default:
 
 	}
 }
-
-
