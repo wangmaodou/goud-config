@@ -2,29 +2,29 @@ package main
 
 import (
 	"./zk"
-	"time"
+	"./web"
 	"fmt"
 )
 
 type Impl struct{
-	zookeeper.CallBack
+	zoke.CallBack
 }
 
-func (c Impl) OnDataChange(path string,client *zookeeper.ZkClient){
+func (c Impl) OnDataChange(path string,client *zoke.ZkClient){
 	fmt.Println("onDataChange======>",path)
 	fmt.Println(client.GetNodeData(path))
 }
 
-func (c Impl) OnChildNodeChange(path string,client *zookeeper.ZkClient){
+func (c Impl) OnChildNodeChange(path string,client *zoke.ZkClient){
 	fmt.Println("OnChildNodeChange======>",path)
 	fmt.Println(client.GetChildNodes(path))
 
 }
 
 func main() {
-	var ch chan string
+	/*var ch chan string
 	ch=make(chan string,10)
-	client, err := zookeeper.Connect([]string{"127.0.0.1:2181"})
+	client, err := zk.Connect([]string{"127.0.0.1:2181"})
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -40,6 +40,7 @@ func main() {
 	}()
 	for i:=0;i<500;i++{
 		<-ch
-	}
+	}*/
+	web.Start()
 
 }

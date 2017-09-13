@@ -1,9 +1,12 @@
-package zookeeper
+package zoke
 
 import (
 	"github.com/samuel/go-zookeeper/zk"
 	"time"
 	"fmt"
+	"sync"
+	"log"
+	"errors"
 )
 
 const (
@@ -30,16 +33,24 @@ type CallBack interface {
 	//OnNodeDelete(path string)
 }
 
-func Connect(hosts []string) (*ZkClient, error) {
+func newClient(hosts []string){
 	cli := ZkClient{}
 	option := zk.WithEventCallback(listen)
 	conn, _, err := zk.Connect(hosts, time.Second*5, option)
-	if err != nil {
-		return nil, err
-	}
+	checkError(err)
 	cli.conn = conn
 	client = &cli
-	return &cli, nil
+}
+
+func GetInstanceClient(hosts []string)(*ZkClient, error){
+	sync.Once{}.Do(func() {
+		newClient(hosts)
+	})
+	if client==nil{
+		return nil,errors.New("Failed to connect zookeeper,please check your hosts.")
+	}else {
+		return client,nil
+	}
 }
 
 /**
@@ -73,12 +84,12 @@ func (z *ZkClient) GetChildNodes(path string) ([]string, error) {
 	return childNodes, err
 }
 
-func (z *ZkClient) AddChildrenWatch(path string, fun CallBack) {
-	methods[path] = fun
+func (z *ZkClient) AddChildrenWatch(path string, call CallBack) {
+	methods[path] = call
 }
 
-func (z *ZkClient) AddDataWatch(path string, fun CallBack) {
-	methods[path] = fun
+func (z *ZkClient) AddDataWatch(path string, call CallBack) {
+	methods[path] = call
 }
 
 func listen(event zk.Event) {
@@ -116,5 +127,12 @@ func listen(event zk.Event) {
 
 	default:
 
+	}
+}
+
+//error check
+func checkError(err error) {
+	if err != nil {
+		log.Println(err)
 	}
 }

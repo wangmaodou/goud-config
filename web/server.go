@@ -2,17 +2,16 @@ package web
 
 import (
 	"net/http"
-	_ "io"
 	"html/template"
 	"os"
 	"log"
 	"io"
+	"./view"
 )
 
 const (
-	LOG           = "[CONFIG_WEB_SERVICE]"
-	PORT          = ":7339"
-	TEMPLATE_PATH = "./web/view/index.html"
+	LOG  = "[CONFIG_WEB_SERVICE]"
+	PORT = ":7339"
 )
 
 var (
@@ -31,13 +30,15 @@ func Start() {
 	log.Fatal(http.ListenAndServe(PORT, nil))
 }
 
+//show configs in web page.
 func viewHandler(w http.ResponseWriter, r *http.Request) {
 	param = getConfigFromCenter()
-	view, err := template.ParseFiles(TEMPLATE_PATH)
+	view, err := template.New("index").Parse(view.INDEX)
 	checkError(err)
 	view.Execute(w, param)
 }
 
+//update config immediately.
 func postHandler(w http.ResponseWriter, r *http.Request) {
 	for k, _ := range param {
 		param[k] = r.FormValue(k)
