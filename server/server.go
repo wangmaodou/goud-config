@@ -22,7 +22,11 @@ var (
 	param = make(map[string]string)
 )
 
-func Start() {
+type Server struct {
+	Name string
+}
+
+func (s *Server) Start() {
 	http.HandleFunc("/", viewHandler)
 	http.HandleFunc("/update", postHandler)
 	log.Println("Local config server server is starting...")

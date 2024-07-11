@@ -22,5 +22,6 @@ func (c Impl) OnChildNodeChange(path string, client *zoke.ZkClient) {
 }
 
 func main() {
-	server.Start()
+	s := &server.Server{Name: "goud"}
+	s.Start()
 }
