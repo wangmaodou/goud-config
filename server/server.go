@@ -1,12 +1,11 @@
-package web
+package server
 
 import (
-	"net/http"
 	"html/template"
-	"os"
-	"log"
 	"io"
-	"./view"
+	"log"
+	"net/http"
+	"os"
 )
 
 const (
@@ -26,19 +25,19 @@ var (
 func Start() {
 	http.HandleFunc("/", viewHandler)
 	http.HandleFunc("/update", postHandler)
-	log.Println("Local config web server is starting...")
+	log.Println("Local config server server is starting...")
 	log.Fatal(http.ListenAndServe(PORT, nil))
 }
 
-//show configs in web page.
+// show configs in server page.
 func viewHandler(w http.ResponseWriter, r *http.Request) {
 	param = getConfigFromCenter()
-	view, err := template.New("index").Parse(view.INDEX)
+	view, err := template.New("index").Parse(INDEX)
 	checkError(err)
 	view.Execute(w, param)
 }
 
-//update config immediately.
+// update config immediately.
 func postHandler(w http.ResponseWriter, r *http.Request) {
 	for k, _ := range param {
 		param[k] = r.FormValue(k)
@@ -63,7 +62,7 @@ func check(err error) {
 }
 
 func checkError(err error) {
-	if (err != nil) {
+	if err != nil {
 		log.Println(LOG, err)
 		os.Exit(1)
 	}

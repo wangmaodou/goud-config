@@ -1,6 +1,6 @@
-package view
+package server
 
-var INDEX = `
+const INDEX = `
 	<!DOCTYPE html>
 	<html lang="en">
 	<head>

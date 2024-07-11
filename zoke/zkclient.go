@@ -1,16 +1,16 @@
 package zoke
 
 import (
-	"github.com/samuel/go-zookeeper/zk"
-	"time"
-	"fmt"
-	"sync"
-	"log"
 	"errors"
+	"fmt"
+	"github.com/go-zookeeper/zk"
+	"log"
+	"sync"
+	"time"
 )
 
 const (
-	_                        = iota
+	_ = iota
 	EventNodeCreated
 	EventNodeDeleted
 	EventNodeDataChanged
@@ -33,7 +33,7 @@ type CallBack interface {
 	//OnNodeDelete(path string)
 }
 
-func newClient(hosts []string){
+func newClient(hosts []string) {
 	cli := ZkClient{}
 	option := zk.WithEventCallback(listen)
 	conn, _, err := zk.Connect(hosts, time.Second*5, option)
@@ -42,14 +42,15 @@ func newClient(hosts []string){
 	client = &cli
 }
 
-func GetInstanceClient(hosts []string)(*ZkClient, error){
-	sync.Once{}.Do(func() {
+func GetInstanceClient(hosts []string) (*ZkClient, error) {
+	once := sync.Once{}
+	once.Do(func() {
 		newClient(hosts)
 	})
-	if client==nil{
-		return nil,errors.New("Failed to connect zookeeper,please check your hosts.")
-	}else {
-		return client,nil
+	if client == nil {
+		return nil, errors.New("Failed to connect zookeeper,please check your hosts.")
+	} else {
+		return client, nil
 	}
 }
 
@@ -111,26 +112,26 @@ func listen(event zk.Event) {
 				client.conn.GetW(event.Path)
 			}()
 		} /*
-	case event.Type==zk.EventNodeCreated:
-		fun, ok :=methods[event.Path]
-		if ok{
-			fun.OnNodeCreate(event.Path)
-			go func(){
-				client.conn.ExistsW(event.Path)
-			}()
-		}
-	case event.Type==zk.EventNodeDeleted:
-		fun, ok :=methods[event.Path]
-		if ok{
-			fun.OnNodeDelete(event.Path)
-		}*/
+			case event.Type==zoke.EventNodeCreated:
+				fun, ok :=methods[event.Path]
+				if ok{
+					fun.OnNodeCreate(event.Path)
+					go func(){
+						client.conn.ExistsW(event.Path)
+					}()
+				}
+			case event.Type==zoke.EventNodeDeleted:
+				fun, ok :=methods[event.Path]
+				if ok{
+					fun.OnNodeDelete(event.Path)
+				}*/
 
 	default:
 
 	}
 }
 
-//error check
+// error check
 func checkError(err error) {
 	if err != nil {
 		log.Println(err)

@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/samuel/go-zookeeper/zk"
+	"github.com/go-zookeeper/zk"
 	"time"
 )
 
@@ -11,11 +11,11 @@ var hosts = []string{"127.0.0.1:2181"}
 var path1 = "/maodou"
 
 var flags int32 = zk.FlagEphemeral
-var data1 = []byte("hello,this is a zk go test demo!!!")
+var data1 = []byte("hello,this is a zoke go test demo!!!")
 var acls = zk.WorldACL(zk.PermAll)
 var conn *zk.Conn
 
-func init(){
+func init() {
 }
 
 func main3() {
@@ -27,7 +27,7 @@ func main3() {
 		return
 	}
 	defer conn.Close()
-	time.Sleep(time.Second*10000000)
+	time.Sleep(time.Second * 10000000)
 	/*_, _, _, err = conn.ExistsW(path1)
 	if err != nil {
 		fmt.Println(err)
@@ -67,7 +67,7 @@ func callback(event zk.Event) {
 	fmt.Println("type:", event.Type.String())
 	fmt.Println("state:", event.State.String())
 	fmt.Println("-------------------")
-	go func () {
+	go func() {
 		_, _, _, err := conn.ChildrenW(path1)
 		if err != nil {
 			fmt.Println(err)
